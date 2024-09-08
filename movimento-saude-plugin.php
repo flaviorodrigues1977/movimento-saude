@@ -2,7 +2,7 @@
 /*
 Plugin Name: Movimento Saúde
 Description: Plugin para gestão de alunos, pais, voluntários, doadores, cursos, professores e doações.
-Version: 1.3
+Version: 1.4
 Author: Flávio Rodrigues
 */
 
