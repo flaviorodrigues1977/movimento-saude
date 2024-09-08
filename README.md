@@ -54,3 +54,190 @@ Melhor visibilidade das atividades e resultados do projeto, aumentando a confian
 
 ## 6. Conclusão:
 Com o novo sistema, o Movimento Saúde estará melhor equipado para atender a comunidade e expandir suas operações, alcançando mais pessoas e oferecendo suporte de maneira mais eficiente e organizada.
+
+
+
+
+# Diagrama de Casos de Uso Atualizado
+
+## Atores:
+Administrador: Gerencia o sistema, usuários, relatórios e cursos.
+Responsável: Gerencia alunos, voluntários e doadores, e acessa relatórios de frequência e atividades.
+Aluno: Participa de cursos e atividades e tem a presença registrada.
+Casos de Uso:
+
+## Administrador:
+Configurar sistema
+Gerenciar usuários (alunos, pais, voluntários, doadores)
+Gerar relatórios (presença, doações, atividades)
+Cadastrar cursos e vagas
+
+## Responsável:
+Inscrever alunos e pais
+Consultar e atualizar informações dos alunos
+Monitorar atividades dos voluntários
+Gerenciar e registrar doações
+Visualizar relatórios de frequência e atividades
+
+## Aluno:
+Participar de cursos e atividades
+Consultar informações de presença
+
+
+# Diagrama Entidade-Relacionamento (ER) Atualizado
+
+### Entidades:
+
+Aluno
+
+ID_Aluno (PK)
+Nome
+Data_Nascimento
+Endereço
+Telefone
+Responsável_ID (FK)
+Responsável
+
+ID_Responsável (PK)
+Nome
+Telefone
+Email
+Curso
+
+ID_Curso (PK)
+Nome
+Descrição
+Data_Início
+Data_Fim
+Vagas_Disponíveis
+Inscrição
+
+ID_Inscrição (PK)
+Aluno_ID (FK)
+Curso_ID (FK)
+Data_Inscrição
+Presença
+
+ID_Presença (PK)
+Aluno_ID (FK)
+Curso_ID (FK)
+Data
+Status (Presente/Absente)
+Doação
+
+ID_Doação (PK)
+Responsável_ID (FK)
+Valor
+Data
+Tipo (Dinheiro/Material)
+Relacionamentos:
+
+Aluno tem um Responsável (Relacionamento 1)
+Aluno pode estar inscrito em vários Cursos (Relacionamento N através da tabela Inscrição)
+Curso pode ter vários Alunos inscritos (Relacionamento N através da tabela Inscrição)
+Presença é registrada para Alunos e Cursos (Relacionamento N)
+Responsável gerencia várias Doações (Relacionamento 1)
+
+
+# Diagrama de Casos de Uso
+
++-----------------+          +-------------------+
+|   Administrador |          |    Responsável    |
++-----------------+          +-------------------+
+|                 |          |                   |
+|  +-----------+  |          |  +-------------+  |
+|  | Configurar|  |          |  | Inscrever   |  |
+|  | Sistema   |  |          |  | Alunos e    |  |
+|  +-----------+  |          |  | Pais        |  |
+|  +-----------+  |          |  +-------------+  |
+|  | Gerenciar |  |          |  | Monitorar   |  |
+|  | Usuários  |  |          |  | Voluntários |  |
+|  +-----------+  |          |  +-------------+  |
+|  +-----------+  |          |  +-------------+  |
+|  | Gerar     |  |          |  | Gerenciar e |  |
+|  | Relatórios|  |          |  | Registrar   |  |
+|  +-----------+  |          |  | Doações     |  |
+|  +-----------+  |          |  +-------------+  |
+|  | Cadastrar |  |          |  | Consultar   |  |
+|  | Cursos e |  |          |  | Relatórios  |  |
+|  | Vagas    |  |          |  | de Frequência| |
+|  +-----------+  |          |                   |
++--------|--------+          +--------|----------+
+         |                           |
+         |                           |
++--------v--------+
+|     Aluno       |
++-----------------+
+|                 |
+|  +-------------+|
+|  | Participar  ||
+|  | em Cursos e ||
+|  | Atividades  ||
+|  +-------------+|
+|  +-------------+|
+|  | Consultar   ||
+|  | Informações ||
+|  | de Presença ||
+|  +-------------+|
++-----------------+
+Diagrama Entidade-Relacionamento (ER)
+
+lua
+Copiar código
++-----------------+     +-----------------+
+|    Aluno        |     |  Responsável    |
++-----------------+     +-----------------+
+| ID_Aluno (PK)   |     | ID_Responsável (PK) |
+| Nome            |     | Nome            |
+| Data_Nascimento  |     | Telefone        |
+| Endereço        |     | Email           |
+| Telefone        |     +-----------------+
+| Responsável_ID (FK) |      
++-----------------+     
+
+        |
+        | 1:N
+        |
+        v
+
++-----------------+     +-----------------+
+|  Inscrição      |     |     Curso       |
++-----------------+     +-----------------+
+| ID_Inscrição (PK)|     | ID_Curso (PK)   |
+| Aluno_ID (FK)   |     | Nome            |
+| Curso_ID (FK)   |     | Descrição       |
+| Data_Inscrição  |     | Data_Início     |
++-----------------+     | Data_Fim        |
+                        | Vagas_Disponíveis|
+                        +-----------------+
+
+        |
+        | N:M
+        |
+        v
+
++-----------------+     
+|   Presença      |     
++-----------------+     
+| ID_Presença (PK)|
+| Aluno_ID (FK)   |     
+| Curso_ID (FK)   |     
+| Data            |     
+| Status          |     
++-----------------+     
+
+        |
+        | 1:N
+        |
+        v
+
++-----------------+
+|     Doação      |
++-----------------+
+| ID_Doação (PK)  |
+| Responsável_ID (FK) |
+| Valor           |
+| Data            |
+| Tipo            |
++-----------------+
+
