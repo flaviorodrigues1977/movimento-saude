@@ -1,95 +1,86 @@
 <?php
 /**
  * Plugin Name: Movimento Saúde
- * Description: Plugin para gestão de alunos, pais, voluntários, doadores, cursos e doações para o projeto Movimento Saúde.
- * Version: 2.3
+ * Description: Plugin para gestão de alunos, pais, voluntários, doadores, cursos e doações para o Movimento Saúde.
+ * Version: 2.4
  * Author: Flávio Rodrigues
  */
 
-// Função para criar as tabelas no banco de dados
+// Função para criar tabelas
 function ms_create_tables() {
     global $wpdb;
     $charset_collate = $wpdb->get_charset_collate();
 
     $tables = [
-        "{$wpdb->prefix}ms_pais" => "
-            CREATE TABLE {$wpdb->prefix}ms_pais (
-                ID BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-                Nome VARCHAR(255) NOT NULL,
-                Data_Nascimento DATE NOT NULL,
-                Profissao VARCHAR(255),
-                Endereco VARCHAR(255) NOT NULL,
-                PRIMARY KEY (ID)
-            ) $charset_collate
-        ",
-        "{$wpdb->prefix}ms_alunos" => "
-            CREATE TABLE {$wpdb->prefix}ms_alunos (
-                ID BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-                Nome VARCHAR(255) NOT NULL,
-                Data_Nascimento DATE NOT NULL,
-                Sexo ENUM('Masculino', 'Feminino') NOT NULL,
-                Pai_ID BIGINT(20) UNSIGNED,
-                Curso_ID BIGINT(20) UNSIGNED,
-                PRIMARY KEY (ID),
-                FOREIGN KEY (Pai_ID) REFERENCES {$wpdb->prefix}ms_pais(ID),
-                FOREIGN KEY (Curso_ID) REFERENCES {$wpdb->prefix}ms_cursos(ID)
-            ) $charset_collate
-        ",
-        "{$wpdb->prefix}ms_cursos" => "
-            CREATE TABLE {$wpdb->prefix}ms_cursos (
-                ID BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-                Nome VARCHAR(255) NOT NULL,
-                Vagas_Disponiveis INT NOT NULL,
-                PRIMARY KEY (ID)
-            ) $charset_collate
-        ",
-        "{$wpdb->prefix}ms_voluntarios" => "
-            CREATE TABLE {$wpdb->prefix}ms_voluntarios (
-                ID BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-                Nome VARCHAR(255) NOT NULL,
-                Email VARCHAR(255) NOT NULL,
-                PRIMARY KEY (ID)
-            ) $charset_collate
-        ",
-        "{$wpdb->prefix}ms_doadores" => "
-            CREATE TABLE {$wpdb->prefix}ms_doadores (
-                ID BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-                Nome VARCHAR(255) NOT NULL,
-                Email VARCHAR(255) NOT NULL,
-                PRIMARY KEY (ID)
-            ) $charset_collate
-        ",
-        "{$wpdb->prefix}ms_doacoes" => "
-            CREATE TABLE {$wpdb->prefix}ms_doacoes (
-                ID BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-                Valor DECIMAL(10, 2) NOT NULL,
-                Doador_ID BIGINT(20) UNSIGNED,
-                Data DATE NOT NULL,
-                PRIMARY KEY (ID),
-                FOREIGN KEY (Doador_ID) REFERENCES {$wpdb->prefix}ms_doadores(ID)
-            ) $charset_collate
-        ",
+        "CREATE TABLE {$wpdb->prefix}ms_pais (
+            ID INT NOT NULL AUTO_INCREMENT,
+            Nome VARCHAR(255) NOT NULL,
+            Data_Nascimento DATE NOT NULL,
+            Profissao VARCHAR(255) NOT NULL,
+            Endereco TEXT NOT NULL,
+            PRIMARY KEY (ID)
+        ) $charset_collate;",
+
+        "CREATE TABLE {$wpdb->prefix}ms_alunos (
+            ID INT NOT NULL AUTO_INCREMENT,
+            Nome VARCHAR(255) NOT NULL,
+            Data_Nascimento DATE NOT NULL,
+            Sexo ENUM('Masculino', 'Feminino') NOT NULL,
+            Pai_ID INT NOT NULL,
+            Curso_ID INT NOT NULL,
+            PRIMARY KEY (ID),
+            FOREIGN KEY (Pai_ID) REFERENCES {$wpdb->prefix}ms_pais(ID),
+            FOREIGN KEY (Curso_ID) REFERENCES {$wpdb->prefix}ms_cursos(ID)
+        ) $charset_collate;",
+
+        "CREATE TABLE {$wpdb->prefix}ms_voluntarios (
+            ID INT NOT NULL AUTO_INCREMENT,
+            Nome VARCHAR(255) NOT NULL,
+            Email VARCHAR(255) NOT NULL,
+            PRIMARY KEY (ID)
+        ) $charset_collate;",
+
+        "CREATE TABLE {$wpdb->prefix}ms_doadores (
+            ID INT NOT NULL AUTO_INCREMENT,
+            Nome VARCHAR(255) NOT NULL,
+            Email VARCHAR(255) NOT NULL,
+            PRIMARY KEY (ID)
+        ) $charset_collate;",
+
+        "CREATE TABLE {$wpdb->prefix}ms_cursos (
+            ID INT NOT NULL AUTO_INCREMENT,
+            Nome VARCHAR(255) NOT NULL,
+            Vagas INT NOT NULL,
+            PRIMARY KEY (ID)
+        ) $charset_collate;",
+
+        "CREATE TABLE {$wpdb->prefix}ms_doacoes (
+            ID INT NOT NULL AUTO_INCREMENT,
+            Valor DECIMAL(10, 2) NOT NULL,
+            Doador_ID INT NOT NULL,
+            Data DATE NOT NULL,
+            PRIMARY KEY (ID),
+            FOREIGN KEY (Doador_ID) REFERENCES {$wpdb->prefix}ms_doadores(ID)
+        ) $charset_collate;",
     ];
 
-    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-    foreach ($tables as $table_name => $sql) {
+    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+    foreach ($tables as $sql) {
         dbDelta($sql);
     }
 }
-register_activation_hook(__FILE__, 'ms_create_tables');
+add_action('plugins_loaded', 'ms_create_tables');
 
-// Função para a página principal do plugin
+// Função para a página principal
 function ms_main_page() {
     echo '<div class="wrap">';
     echo '<h1>Movimento Saúde - Gestão</h1>';
-    echo '<h2>Formulários de Cadastro</h2>';
     echo '<ul>';
     echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_pais')) . '">Cadastro de Pais</a></li>';
     echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_alunos')) . '">Cadastro de Alunos</a></li>';
-    echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_cursos')) . '">Cadastro de Cursos</a></li>';
     echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_voluntarios')) . '">Cadastro de Voluntários</a></li>';
     echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_doadores')) . '">Cadastro de Doadores</a></li>';
+    echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_cursos')) . '">Cadastro de Cursos</a></li>';
     echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_doacoes')) . '">Cadastro de Doações</a></li>';
     echo '<li><a href="' . esc_url(admin_url('admin.php?page=ms_relatorios')) . '">Relatórios</a></li>';
     echo '</ul>';
@@ -108,7 +99,7 @@ function ms_cadastro_pais_page() {
         $nome = sanitize_text_field($_POST['nome']);
         $data_nascimento = sanitize_text_field($_POST['data_nascimento']);
         $profissao = sanitize_text_field($_POST['profissao']);
-        $endereco = sanitize_text_field($_POST['endereco']);
+        $endereco = sanitize_textarea_field($_POST['endereco']);
 
         $wpdb->insert(
             "{$wpdb->prefix}ms_pais",
@@ -132,8 +123,8 @@ function ms_cadastro_pais_page() {
     echo '<table class="form-table">';
     echo '<tr valign="top"><th scope="row">Nome</th><td><input type="text" name="nome" required /></td></tr>';
     echo '<tr valign="top"><th scope="row">Data de Nascimento</th><td><input type="date" name="data_nascimento" required /></td></tr>';
-    echo '<tr valign="top"><th scope="row">Profissão</th><td><input type="text" name="profissao" /></td></tr>';
-    echo '<tr valign="top"><th scope="row">Endereço</th><td><input type="text" name="endereco" required /></td></tr>';
+    echo '<tr valign="top"><th scope="row">Profissão</th><td><input type="text" name="profissao" required /></td></tr>';
+    echo '<tr valign="top"><th scope="row">Endereço</th><td><textarea name="endereco" required></textarea></td></tr>';
     echo '</table>';
     echo '<p><input type="submit" name="ms_pai_submit" value="Cadastrar Pai" class="button button-primary" /></p>';
     echo '</form>';
@@ -172,9 +163,9 @@ function ms_cadastro_alunos_page() {
         $pai_id = intval($_POST['pai_id']);
         $curso_id = intval($_POST['curso_id']);
 
-        // Verificar se há vagas disponíveis no curso
-        $curso = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->prefix}ms_cursos WHERE ID = %d", $curso_id));
-        if ($curso && $curso->Vagas_Disponiveis > 0) {
+        // Verificar se há vagas disponíveis
+        $curso = $wpdb->get_row($wpdb->prepare("SELECT Vagas FROM {$wpdb->prefix}ms_cursos WHERE ID = %d", $curso_id));
+        if ($curso && $curso->Vagas > 0) {
             $wpdb->insert(
                 "{$wpdb->prefix}ms_alunos",
                 [
@@ -187,10 +178,10 @@ function ms_cadastro_alunos_page() {
                 ['%s', '%s', '%s', '%d', '%d']
             );
 
-            // Reduzir o número de vagas disponíveis no curso
+            // Reduzir o número de vagas disponíveis
             $wpdb->update(
                 "{$wpdb->prefix}ms_cursos",
-                ['Vagas_Disponiveis' => $curso->Vagas_Disponiveis - 1],
+                ['Vagas' => $curso->Vagas - 1],
                 ['ID' => $curso_id],
                 ['%d'],
                 ['%d']
@@ -198,7 +189,7 @@ function ms_cadastro_alunos_page() {
 
             echo '<div class="updated"><p>Aluno cadastrado com sucesso.</p></div>';
         } else {
-            echo '<div class="error"><p>Não há vagas disponíveis para este curso.</p></div>';
+            echo '<div class="error"><p>Não há vagas disponíveis para o curso selecionado.</p></div>';
         }
     }
 
@@ -211,16 +202,14 @@ function ms_cadastro_alunos_page() {
     echo '<tr valign="top"><th scope="row">Nome</th><td><input type="text" name="nome" required /></td></tr>';
     echo '<tr valign="top"><th scope="row">Data de Nascimento</th><td><input type="date" name="data_nascimento" required /></td></tr>';
     echo '<tr valign="top"><th scope="row">Sexo</th><td><select name="sexo" required><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option></select></td></tr>';
-    echo '<tr valign="top"><th scope="row">Pai</th><td>';
-    echo '<select name="pai_id" required>';
-    $pais = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ms_pais");
+    echo '<tr valign="top"><th scope="row">Pai</th><td><select name="pai_id" required>';
+    $pais = $wpdb->get_results("SELECT ID, Nome FROM {$wpdb->prefix}ms_pais");
     foreach ($pais as $pai) {
         echo '<option value="' . esc_attr($pai->ID) . '">' . esc_html($pai->Nome) . '</option>';
     }
     echo '</select></td></tr>';
-    echo '<tr valign="top"><th scope="row">Curso</th><td>';
-    echo '<select name="curso_id" required>';
-    $cursos = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ms_cursos");
+    echo '<tr valign="top"><th scope="row">Curso</th><td><select name="curso_id" required>';
+    $cursos = $wpdb->get_results("SELECT ID, Nome FROM {$wpdb->prefix}ms_cursos");
     foreach ($cursos as $curso) {
         echo '<option value="' . esc_attr($curso->ID) . '">' . esc_html($curso->Nome) . '</option>';
     }
@@ -234,14 +223,19 @@ function ms_cadastro_alunos_page() {
     echo '<table class="wp-list-table widefat fixed striped">';
     echo '<thead><tr><th>Nome</th><th>Data de Nascimento</th><th>Sexo</th><th>Pai</th><th>Curso</th><th>Ações</th></tr></thead>';
     echo '<tbody>';
-    $alunos = $wpdb->get_results("SELECT a.*, p.Nome AS Pai_Nome, c.Nome AS Curso_Nome FROM {$wpdb->prefix}ms_alunos a LEFT JOIN {$wpdb->prefix}ms_pais p ON a.Pai_ID = p.ID LEFT JOIN {$wpdb->prefix}ms_cursos c ON a.Curso_ID = c.ID");
+    $alunos = $wpdb->get_results("
+        SELECT a.ID, a.Nome, a.Data_Nascimento, a.Sexo, p.Nome AS Pai, c.Nome AS Curso
+        FROM {$wpdb->prefix}ms_alunos a
+        JOIN {$wpdb->prefix}ms_pais p ON a.Pai_ID = p.ID
+        JOIN {$wpdb->prefix}ms_cursos c ON a.Curso_ID = c.ID
+    ");
     foreach ($alunos as $aluno) {
         echo '<tr>';
         echo '<td>' . esc_html($aluno->Nome) . '</td>';
         echo '<td>' . esc_html($aluno->Data_Nascimento) . '</td>';
         echo '<td>' . esc_html($aluno->Sexo) . '</td>';
-        echo '<td>' . esc_html($aluno->Pai_Nome) . '</td>';
-        echo '<td>' . esc_html($aluno->Curso_Nome) . '</td>';
+        echo '<td>' . esc_html($aluno->Pai) . '</td>';
+        echo '<td>' . esc_html($aluno->Curso) . '</td>';
         echo '<td><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_alunos&editar=' . $aluno->ID)) . '">Editar</a> | <a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_alunos&excluir=' . $aluno->ID)) . '">Excluir</a></td>';
         echo '</tr>';
     }
@@ -259,13 +253,13 @@ function ms_cadastro_cursos_page() {
     // Processar formulário de cadastro de cursos
     if (isset($_POST['ms_curso_submit']) && check_admin_referer('ms_curso_nonce_action', 'ms_curso_nonce_field')) {
         $nome = sanitize_text_field($_POST['nome']);
-        $vagas_disponiveis = intval($_POST['vagas_disponiveis']);
+        $vagas = intval($_POST['vagas']);
 
         $wpdb->insert(
             "{$wpdb->prefix}ms_cursos",
             [
                 'Nome' => $nome,
-                'Vagas_Disponiveis' => $vagas_disponiveis
+                'Vagas' => $vagas
             ],
             ['%s', '%d']
         );
@@ -279,8 +273,8 @@ function ms_cadastro_cursos_page() {
     echo '<form method="post" action="">';
     echo wp_nonce_field('ms_curso_nonce_action', 'ms_curso_nonce_field');
     echo '<table class="form-table">';
-    echo '<tr valign="top"><th scope="row">Nome do Curso</th><td><input type="text" name="nome" required /></td></tr>';
-    echo '<tr valign="top"><th scope="row">Vagas Disponíveis</th><td><input type="number" name="vagas_disponiveis" required /></td></tr>';
+    echo '<tr valign="top"><th scope="row">Nome</th><td><input type="text" name="nome" required /></td></tr>';
+    echo '<tr valign="top"><th scope="row">Vagas</th><td><input type="number" name="vagas" required /></td></tr>';
     echo '</table>';
     echo '<p><input type="submit" name="ms_curso_submit" value="Cadastrar Curso" class="button button-primary" /></p>';
     echo '</form>';
@@ -288,13 +282,13 @@ function ms_cadastro_cursos_page() {
     // Listar Cursos Cadastrados
     echo '<h2>Cursos Cadastrados</h2>';
     echo '<table class="wp-list-table widefat fixed striped">';
-    echo '<thead><tr><th>Nome</th><th>Vagas Disponíveis</th><th>Ações</th></tr></thead>';
+    echo '<thead><tr><th>Nome</th><th>Vagas</th><th>Ações</th></tr></thead>';
     echo '<tbody>';
     $cursos = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ms_cursos");
     foreach ($cursos as $curso) {
         echo '<tr>';
         echo '<td>' . esc_html($curso->Nome) . '</td>';
-        echo '<td>' . esc_html($curso->Vagas_Disponiveis) . '</td>';
+        echo '<td>' . esc_html($curso->Vagas) . '</td>';
         echo '<td><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_cursos&editar=' . $curso->ID)) . '">Editar</a> | <a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_cursos&excluir=' . $curso->ID)) . '">Excluir</a></td>';
         echo '</tr>';
     }
@@ -441,9 +435,8 @@ function ms_cadastro_doacoes_page() {
     echo wp_nonce_field('ms_doacao_nonce_action', 'ms_doacao_nonce_field');
     echo '<table class="form-table">';
     echo '<tr valign="top"><th scope="row">Valor</th><td><input type="text" name="valor" required /></td></tr>';
-    echo '<tr valign="top"><th scope="row">Doador</th><td>';
-    echo '<select name="doador_id" required>';
-    $doadores = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ms_doadores");
+    echo '<tr valign="top"><th scope="row">Doador</th><td><select name="doador_id" required>';
+    $doadores = $wpdb->get_results("SELECT ID, Nome FROM {$wpdb->prefix}ms_doadores");
     foreach ($doadores as $doador) {
         echo '<option value="' . esc_attr($doador->ID) . '">' . esc_html($doador->Nome) . '</option>';
     }
@@ -458,11 +451,15 @@ function ms_cadastro_doacoes_page() {
     echo '<table class="wp-list-table widefat fixed striped">';
     echo '<thead><tr><th>Valor</th><th>Doador</th><th>Data</th><th>Ações</th></tr></thead>';
     echo '<tbody>';
-    $doacoes = $wpdb->get_results("SELECT d.*, do.Nome AS Doador_Nome FROM {$wpdb->prefix}ms_doacoes d LEFT JOIN {$wpdb->prefix}ms_doadores do ON d.Doador_ID = do.ID");
+    $doacoes = $wpdb->get_results("
+        SELECT d.ID, d.Valor, do.Nome AS Doador, d.Data
+        FROM {$wpdb->prefix}ms_doacoes d
+        JOIN {$wpdb->prefix}ms_doadores do ON d.Doador_ID = do.ID
+    ");
     foreach ($doacoes as $doacao) {
         echo '<tr>';
         echo '<td>' . esc_html($doacao->Valor) . '</td>';
-        echo '<td>' . esc_html($doacao->Doador_Nome) . '</td>';
+        echo '<td>' . esc_html($doacao->Doador) . '</td>';
         echo '<td>' . esc_html($doacao->Data) . '</td>';
         echo '<td><a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_doacoes&editar=' . $doacao->ID)) . '">Editar</a> | <a href="' . esc_url(admin_url('admin.php?page=ms_cadastro_doacoes&excluir=' . $doacao->ID)) . '">Excluir</a></td>';
         echo '</tr>';
@@ -479,35 +476,30 @@ function ms_relatorios_page() {
     global $wpdb;
 
     // Relatório de aniversariantes do mês
+    $mes_atual = date('m');
+    $aniversariantes = $wpdb->get_results($wpdb->prepare("
+        SELECT Nome, Data_Nascimento
+        FROM {$wpdb->prefix}ms_alunos
+        WHERE MONTH(Data_Nascimento) = %d
+    ", $mes_atual));
+
     echo '<div class="wrap">';
     echo '<h1>Relatórios</h1>';
     echo '<h2>Aniversariantes do Mês</h2>';
-
-    $mes_atual = date('m');
-    $ano_atual = date('Y');
-    $aniversariantes = $wpdb->get_results($wpdb->prepare(
-        "SELECT Nome, Data_Nascimento FROM {$wpdb->prefix}ms_alunos WHERE MONTH(Data_Nascimento) = %d AND YEAR(Data_Nascimento) = %d",
-        $mes_atual,
-        $ano_atual
-    ));
-
-    if ($aniversariantes) {
-        echo '<table class="wp-list-table widefat fixed striped">';
-        echo '<thead><tr><th>Nome</th><th>Data de Nascimento</th></tr></thead>';
-        echo '<tbody>';
-        foreach ($aniversariantes as $aluno) {
-            echo '<tr>';
-            echo '<td>' . esc_html($aluno->Nome) . '</td>';
-            echo '<td>' . esc_html($aluno->Data_Nascimento) . '</td>';
-            echo '</tr>';
-        }
-        echo '</tbody></table>';
-    } else {
-        echo '<p>Nenhum aniversariante encontrado para este mês.</p>';
+    echo '<table class="wp-list-table widefat fixed striped">';
+    echo '<thead><tr><th>Nome</th><th>Data de Nascimento</th></tr></thead>';
+    echo '<tbody>';
+    foreach ($aniversariantes as $aniversariante) {
+        echo '<tr>';
+        echo '<td>' . esc_html($aniversariante->Nome) . '</td>';
+        echo '<td>' . esc_html($aniversariante->Data_Nascimento) . '</td>';
+        echo '</tr>';
     }
-
+    echo '</tbody></table>';
     echo '</div>';
 }
 add_action('admin_menu', function() {
-    add_menu_page('Relatórios', 'Relatórios', 'manage_options', 'ms_relatorios', 'ms_relatorios_page');
+    add_submenu_page('ms_main_page', 'Relatórios', 'Relatórios', 'manage_options', 'ms_relatorios', 'ms_relatorios_page');
 });
+
+?>
