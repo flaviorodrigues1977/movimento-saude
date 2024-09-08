@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Movimento Saúde
  * Description: Plugin para gestão de alunos, pais, voluntários, cursos e doações do Movimento Saúde.
- * Version: 1.8
+ * Version: 1.9
  * Author: Flávio Rodrigues
  */
 
@@ -80,7 +80,6 @@ function ms_display_table($table_name, $columns, $type) {
 function ms_cadastro_pais_page() {
     global $wpdb;
 
-    // Verificar se o formulário foi enviado e validar nonce
     if (isset($_POST['ms_pai_submit']) && check_admin_referer('ms_pai_nonce_action', 'ms_pai_nonce_field')) {
         $nome = sanitize_text_field($_POST['nome']);
         $data_nascimento = sanitize_text_field($_POST['data_nascimento']);
@@ -98,7 +97,6 @@ function ms_cadastro_pais_page() {
         );
         $pai_id = $wpdb->insert_id;
 
-        // Cadastrar filhos associados
         if (isset($_POST['filhos'])) {
             foreach ($_POST['filhos'] as $filho) {
                 $wpdb->insert(
@@ -112,7 +110,6 @@ function ms_cadastro_pais_page() {
         }
     }
 
-    // Exibir o formulário de cadastro de pais
     echo '<div class="wrap">';
     echo '<h1>Cadastro de Pais</h1>';
     echo '<form method="post" action="">';
@@ -124,7 +121,6 @@ function ms_cadastro_pais_page() {
     echo '<tr><th><label for="endereco">Endereço</label></th><td><input type="text" id="endereco" name="endereco" required></td></tr>';
     echo '</table>';
     
-    // Adicionar campo dinâmico para cadastrar filhos
     echo '<h2>Filhos</h2>';
     echo '<div id="filhos_container">';
     echo '<div class="filho_entry"><input type="text" name="filhos[0][nome]" placeholder="Nome do Filho"></div>';
@@ -145,7 +141,6 @@ function ms_cadastro_pais_page() {
     echo '<input type="submit" name="ms_pai_submit" class="button-primary" value="Cadastrar Pai">';
     echo '</form>';
 
-    // Listar pais e seus filhos associados
     echo '<h2>Pais Cadastrados</h2>';
     $pais = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ms_pais");
     if ($pais) {
@@ -173,8 +168,6 @@ function ms_cadastro_pais_page() {
 
 // Funções para as páginas de cadastro dos alunos, cursos, voluntários, doadores e doações
 // A implementação das outras páginas será semelhante à página de cadastro dos pais, adaptando para cada tipo de cadastro
-
-// Adicionar o código para cadastro e exibição das outras entidades conforme a estrutura da página de pais
 
 // Função para ativar o plugin e criar tabelas no banco de dados
 function ms_plugin_activate() {
