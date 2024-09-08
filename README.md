@@ -139,6 +139,7 @@ Presença é registrada para Alunos e Cursos (Relacionamento N)
 Responsável gerencia várias Doações (Relacionamento 1)
 
 
+
 # Diagrama de Casos de Uso
 
 +-----------------+          +-------------------+
@@ -180,10 +181,12 @@ Responsável gerencia várias Doações (Relacionamento 1)
 |  | de Presença ||
 |  +-------------+|
 +-----------------+
-Diagrama Entidade-Relacionamento (ER)
 
-lua
-Copiar código
+
+
+
+# Diagrama Entidade-Relacionamento (ER)
+
 +-----------------+     +-----------------+
 |    Aluno        |     |  Responsável    |
 +-----------------+     +-----------------+
