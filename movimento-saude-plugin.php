@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Movimento Saúde
  * Description: Plugin para gestão de alunos, pais, voluntários, cursos e doações do Movimento Saúde.
- * Version: 1.9
+ * Version: 2.0
  * Author: Flávio Rodrigues
  */
 
@@ -106,6 +106,14 @@ function ms_cadastro_pais_page() {
                         'Pai_ID' => $pai_id
                     ]
                 );
+                $curso_id = intval($_POST['curso']);
+                if ($curso_id > 0) {
+                    $wpdb->update(
+                        "{$wpdb->prefix}ms_cursos",
+                        ['Vagas_Disponíveis' => $wpdb->get_var($wpdb->prepare("SELECT Vagas_Disponíveis FROM {$wpdb->prefix}ms_cursos WHERE ID = %d", $curso_id)) - 1],
+                        ['ID' => $curso_id]
+                    );
+                }
             }
         }
     }
@@ -120,30 +128,26 @@ function ms_cadastro_pais_page() {
     echo '<tr><th><label for="profissao">Profissão</label></th><td><input type="text" id="profissao" name="profissao"></td></tr>';
     echo '<tr><th><label for="endereco">Endereço</label></th><td><input type="text" id="endereco" name="endereco" required></td></tr>';
     echo '</table>';
-    
+
     echo '<h2>Filhos</h2>';
     echo '<div id="filhos_container">';
     echo '<div class="filho_entry"><input type="text" name="filhos[0][nome]" placeholder="Nome do Filho"></div>';
     echo '</div>';
     echo '<button type="button" onclick="addFilho()">Adicionar Filho</button>';
-    
-    echo '<script>
-    function addFilho() {
-        var container = document.getElementById("filhos_container");
-        var index = container.children.length;
-        var entry = document.createElement("div");
-        entry.className = "filho_entry";
-        entry.innerHTML = `<input type="text" name="filhos[${index}][nome]" placeholder="Nome do Filho">`;
-        container.appendChild(entry);
+    echo '<h2>Curso</h2>';
+    echo '<select name="curso">';
+    $cursos = $wpdb->get_results("SELECT ID, Nome FROM {$wpdb->prefix}ms_cursos");
+    foreach ($cursos as $curso) {
+        echo '<option value="' . esc_attr($curso->ID) . '">' . esc_html($curso->Nome) . '</option>';
     }
-    </script>';
-    
-    echo '<input type="submit" name="ms_pai_submit" class="button-primary" value="Cadastrar Pai">';
+    echo '</select>';
+    echo '<p><input type="submit" name="ms_pai_submit" value="Cadastrar"></p>';
     echo '</form>';
 
-    echo '<h2>Pais Cadastrados</h2>';
+    // Listar filhos associados
     $pais = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ms_pais");
     if ($pais) {
+        echo '<h2>Filhos Cadastrados</h2>';
         echo '<table class="wp-list-table widefat fixed striped">';
         echo '<thead><tr><th>Nome</th><th>Data de Nascimento</th><th>Profissão</th><th>Endereço</th><th>Filhos</th><th>Ações</th></tr></thead>';
         echo '<tbody>';
@@ -166,84 +170,210 @@ function ms_cadastro_pais_page() {
     echo '</div>';
 }
 
-// Funções para as páginas de cadastro dos alunos, cursos, voluntários, doadores e doações
-// A implementação das outras páginas será semelhante à página de cadastro dos pais, adaptando para cada tipo de cadastro
-
-// Função para ativar o plugin e criar tabelas no banco de dados
-function ms_plugin_activate() {
-    global $wpdb;
-    $charset_collate = $wpdb->get_charset_collate();
-
-    $sql_pais = "CREATE TABLE {$wpdb->prefix}ms_pais (
-        ID mediumint(9) NOT NULL AUTO_INCREMENT,
-        Nome varchar(255) NOT NULL,
-        Data_Nascimento date NOT NULL,
-        Profissao varchar(255),
-        Endereco varchar(255),
-        PRIMARY KEY (ID)
-    ) $charset_collate;";
-
-    $sql_alunos = "CREATE TABLE {$wpdb->prefix}ms_alunos (
-        ID mediumint(9) NOT NULL AUTO_INCREMENT,
-        Nome varchar(255) NOT NULL,
-        Pai_ID mediumint(9),
-        Curso_ID mediumint(9),
-        PRIMARY KEY (ID)
-    ) $charset_collate;";
-
-    $sql_cursos = "CREATE TABLE {$wpdb->prefix}ms_cursos (
-        ID mediumint(9) NOT NULL AUTO_INCREMENT,
-        Nome varchar(255) NOT NULL,
-        Vagas_Disponíveis int NOT NULL,
-        PRIMARY KEY (ID)
-    ) $charset_collate;";
-
-    $sql_voluntarios = "CREATE TABLE {$wpdb->prefix}ms_voluntarios (
-        ID mediumint(9) NOT NULL AUTO_INCREMENT,
-        Nome varchar(255) NOT NULL,
-        Telefone varchar(255),
-        Email varchar(255),
-        PRIMARY KEY (ID)
-    ) $charset_collate;";
-
-    $sql_doadores = "CREATE TABLE {$wpdb->prefix}ms_doadores (
-        ID mediumint(9) NOT NULL AUTO_INCREMENT,
-        Nome varchar(255) NOT NULL,
-        Telefone varchar(255),
-        Email varchar(255),
-        PRIMARY KEY (ID)
-    ) $charset_collate;";
-
-    $sql_doacoes = "CREATE TABLE {$wpdb->prefix}ms_doacoes (
-        ID mediumint(9) NOT NULL AUTO_INCREMENT,
-        Valor varchar(255) NOT NULL,
-        Doador_ID mediumint(9),
-        Data date NOT NULL,
-        PRIMARY KEY (ID)
-    ) $charset_collate;";
-
-    require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-    dbDelta($sql_pais);
-    dbDelta($sql_alunos);
-    dbDelta($sql_cursos);
-    dbDelta($sql_voluntarios);
-    dbDelta($sql_doadores);
-    dbDelta($sql_doacoes);
-}
-
-register_activation_hook(__FILE__, 'ms_plugin_activate');
-
-// Função para desinstalar o plugin
-function ms_plugin_uninstall() {
+// Função para a página de cadastro dos alunos
+function ms_cadastro_alunos_page() {
     global $wpdb;
 
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ms_pais");
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ms_alunos");
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ms_cursos");
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ms_voluntarios");
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ms_doadores");
-    $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}ms_doacoes");
+    if (isset($_POST['ms_aluno_submit']) && check_admin_referer('ms_aluno_nonce_action', 'ms_aluno_nonce_field')) {
+        $nome = sanitize_text_field($_POST['nome']);
+        $pai_id = intval($_POST['pai_id']);
+        $curso_id = intval($_POST['curso_id']);
+
+        $wpdb->insert(
+            "{$wpdb->prefix}ms_alunos",
+            [
+                'Nome' => $nome,
+                'Pai_ID' => $pai_id,
+                'Curso_ID' => $curso_id
+            ]
+        );
+
+        // Atualizar vagas disponíveis
+        if ($curso_id > 0) {
+            $wpdb->update(
+                "{$wpdb->prefix}ms_cursos",
+                ['Vagas_Disponíveis' => $wpdb->get_var($wpdb->prepare("SELECT Vagas_Disponíveis FROM {$wpdb->prefix}ms_cursos WHERE ID = %d", $curso_id)) - 1],
+                ['ID' => $curso_id]
+            );
+        }
+    }
+
+    echo '<div class="wrap">';
+    echo '<h1>Cadastro de Alunos</h1>';
+    echo '<form method="post" action="">';
+    echo wp_nonce_field('ms_aluno_nonce_action', 'ms_aluno_nonce_field');
+    echo '<table class="form-table">';
+    echo '<tr><th><label for="nome">Nome</label></th><td><input type="text" id="nome" name="nome" required></td></tr>';
+    echo '<tr><th><label for="pai_id">Pai</label></th><td><select id="pai_id" name="pai_id">';
+    $pais = $wpdb->get_results("SELECT ID, Nome FROM {$wpdb->prefix}ms_pais");
+    foreach ($pais as $pai) {
+        echo '<option value="' . esc_attr($pai->ID) . '">' . esc_html($pai->Nome) . '</option>';
+    }
+    echo '</select></td></tr>';
+    echo '<tr><th><label for="curso_id">Curso</label></th><td><select id="curso_id" name="curso_id">';
+    $cursos = $wpdb->get_results("SELECT ID, Nome FROM {$wpdb->prefix}ms_cursos");
+    foreach ($cursos as $curso) {
+        echo '<option value="' . esc_attr($curso->ID) . '">' . esc_html($curso->Nome) . '</option>';
+    }
+    echo '</select></td></tr>';
+    echo '</table>';
+    echo '<p><input type="submit" name="ms_aluno_submit" value="Cadastrar"></p>';
+    echo '</form>';
+    echo '</div>';
 }
 
-register_uninstall_hook(__FILE__, 'ms_plugin_uninstall');
-?>
+// Função para a página de cadastro dos cursos
+function ms_cadastro_cursos_page() {
+    global $wpdb;
+
+    if (isset($_POST['ms_curso_submit']) && check_admin_referer('ms_curso_nonce_action', 'ms_curso_nonce_field')) {
+        $nome = sanitize_text_field($_POST['nome']);
+        $vagas_disponiveis = intval($_POST['vagas_disponiveis']);
+
+        $wpdb->insert(
+            "{$wpdb->prefix}ms_cursos",
+            [
+                'Nome' => $nome,
+                'Vagas_Disponíveis' => $vagas_disponiveis
+            ]
+        );
+    }
+
+    echo '<div class="wrap">';
+    echo '<h1>Cadastro de Cursos</h1>';
+    echo '<form method="post" action="">';
+    echo wp_nonce_field('ms_curso_nonce_action', 'ms_curso_nonce_field');
+    echo '<table class="form-table">';
+    echo '<tr><th><label for="nome">Nome</label></th><td><input type="text" id="nome" name="nome" required></td></tr>';
+    echo '<tr><th><label for="vagas_disponiveis">Vagas Disponíveis</label></th><td><input type="number" id="vagas_disponiveis" name="vagas_disponiveis" required></td></tr>';
+    echo '</table>';
+    echo '<p><input type="submit" name="ms_curso_submit" value="Cadastrar"></p>';
+    echo '</form>';
+    echo '</div>';
+}
+
+// Função para a página de cadastro dos voluntários
+function ms_cadastro_voluntarios_page() {
+    global $wpdb;
+
+    if (isset($_POST['ms_voluntario_submit']) && check_admin_referer('ms_voluntario_nonce_action', 'ms_voluntario_nonce_field')) {
+        $nome = sanitize_text_field($_POST['nome']);
+        $telefone = sanitize_text_field($_POST['telefone']);
+        $email = sanitize_email($_POST['email']);
+
+        $wpdb->insert(
+            "{$wpdb->prefix}ms_voluntarios",
+            [
+                'Nome' => $nome,
+                'Telefone' => $telefone,
+                'Email' => $email
+            ]
+        );
+    }
+
+    echo '<div class="wrap">';
+    echo '<h1>Cadastro de Voluntários</h1>';
+    echo '<form method="post" action="">';
+    echo wp_nonce_field('ms_voluntario_nonce_action', 'ms_voluntario_nonce_field');
+    echo '<table class="form-table">';
+    echo '<tr><th><label for="nome">Nome</label></th><td><input type="text" id="nome" name="nome" required></td></tr>';
+    echo '<tr><th><label for="telefone">Telefone</label></th><td><input type="text" id="telefone" name="telefone"></td></tr>';
+    echo '<tr><th><label for="email">Email</label></th><td><input type="email" id="email" name="email"></td></tr>';
+    echo '</table>';
+    echo '<p><input type="submit" name="ms_voluntario_submit" value="Cadastrar"></p>';
+    echo '</form>';
+    echo '</div>';
+}
+
+// Função para a página de cadastro dos doadores
+function ms_cadastro_doadores_page() {
+    global $wpdb;
+
+    if (isset($_POST['ms_doador_submit']) && check_admin_referer('ms_doador_nonce_action', 'ms_doador_nonce_field')) {
+        $nome = sanitize_text_field($_POST['nome']);
+        $telefone = sanitize_text_field($_POST['telefone']);
+        $email = sanitize_email($_POST['email']);
+
+        $wpdb->insert(
+            "{$wpdb->prefix}ms_doadores",
+            [
+                'Nome' => $nome,
+                'Telefone' => $telefone,
+                'Email' => $email
+            ]
+        );
+    }
+
+    echo '<div class="wrap">';
+    echo '<h1>Cadastro de Doadores</h1>';
+    echo '<form method="post" action="">';
+    echo wp_nonce_field('ms_doador_nonce_action', 'ms_doador_nonce_field');
+    echo '<table class="form-table">';
+    echo '<tr><th><label for="nome">Nome</label></th><td><input type="text" id="nome" name="nome" required></td></tr>';
+    echo '<tr><th><label for="telefone">Telefone</label></th><td><input type="text" id="telefone" name="telefone"></td></tr>';
+    echo '<tr><th><label for="email">Email</label></th><td><input type="email" id="email" name="email"></td></tr>';
+    echo '</table>';
+    echo '<p><input type="submit" name="ms_doador_submit" value="Cadastrar"></p>';
+    echo '</form>';
+
+    // Listar doações associadas
+    $doadores = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}ms_doadores");
+    if ($doadores) {
+        echo '<h2>Doações Associadas</h2>';
+        echo '<table class="wp-list-table widefat fixed striped">';
+        echo '<thead><tr><th>Valor</th><th>Doador</th><th>Data</th></tr></thead>';
+        echo '<tbody>';
+        foreach ($doadores as $doador) {
+            $doacoes = $wpdb->get_results($wpdb->prepare("SELECT Valor, Data FROM {$wpdb->prefix}ms_doacoes WHERE Doador_ID = %d", $doador->ID));
+            foreach ($doacoes as $doacao) {
+                echo '<tr>';
+                echo '<td>' . esc_html($doacao->Valor) . '</td>';
+                echo '<td>' . esc_html($doador->Nome) . '</td>';
+                echo '<td>' . esc_html($doacao->Data) . '</td>';
+                echo '</tr>';
+            }
+        }
+        echo '</tbody></table>';
+    } else {
+        echo '<p>Nenhum doador cadastrado.</p>';
+    }
+    echo '</div>';
+}
+
+// Função para a página de cadastro das doações
+function ms_cadastro_doacoes_page() {
+    global $wpdb;
+
+    if (isset($_POST['ms_doacao_submit']) && check_admin_referer('ms_doacao_nonce_action', 'ms_doacao_nonce_field')) {
+        $valor = sanitize_text_field($_POST['valor']);
+        $doador_id = intval($_POST['doador_id']);
+        $data = sanitize_text_field($_POST['data']);
+
+        $wpdb->insert(
+            "{$wpdb->prefix}ms_doacoes",
+            [
+                'Valor' => $valor,
+                'Doador_ID' => $doador_id,
+                'Data' => $data
+            ]
+        );
+    }
+
+    echo '<div class="wrap">';
+    echo '<h1>Cadastro de Doações</h1>';
+    echo '<form method="post" action="">';
+    echo wp_nonce_field('ms_doacao_nonce_action', 'ms_doacao_nonce_field');
+    echo '<table class="form-table">';
+    echo '<tr><th><label for="valor">Valor</label></th><td><input type="text" id="valor" name="valor" required></td></tr>';
+    echo '<tr><th><label for="doador_id">Doador</label></th><td><select id="doador_id" name="doador_id">';
+    $doadores = $wpdb->get_results("SELECT ID, Nome FROM {$wpdb->prefix}ms_doadores");
+    foreach ($doadores as $doador) {
+        echo '<option value="' . esc_attr($doador->ID) . '">' . esc_html($doador->Nome) . '</option>';
+    }
+    echo '</select></td></tr>';
+    echo '<tr><th><label for="data">Data</label></th><td><input type="date" id="data" name="data" required></td></tr>';
+    echo '</table>';
+    echo '<p><input type="submit" name="ms_doacao_submit" value="Cadastrar"></p>';
+    echo '</form>';
+    echo '</div>';
+}
